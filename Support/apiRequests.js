@@ -1,12 +1,17 @@
 import { getAccessToken } from './tokenUtils';
 import * as queries from './queries';
 
+/**
+ * Sends a GraphQL request with authentication.
+ * @param {string} query - The GraphQL query or mutation.
+ * @param {object} variables - The variables for the query/mutation.
+ */
 const sendGraphQLRequest = async (query, variables = {}) => {
-  const token = await getAccessToken();  // Get the latest token
+  const token = await getAccessToken();  // Get fresh access token
 
   return cy.request({
     method: 'POST',
-    url: process.env.CYPRESS_GRAPHQL_API_URL, // Dynamically use API URL from .env
+    url: Cypress.env('CYPRESS_GRAPHQL_API_URL'),  // Use Cypress environment variable
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -18,7 +23,7 @@ const sendGraphQLRequest = async (query, variables = {}) => {
   });
 };
 
-// Central API functions for all operations
+// API Functions
 
 export const createLoginSession = () => {
   return sendGraphQLRequest(queries.CREATE_LOGIN_SESSION_MUTATION);
