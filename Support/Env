@@ -1,0 +1,9 @@
+# Base URL of your application
+CYPRESS_BASE_URL=https://your-app-url
+
+# API base URL
+CYPRESS_API_BASE_URL=https://your-api-url
+
+# Azure AD credentials (local)
+CYPRESS_AAD_USERNAME=your.email@company.com
+CYPRESS_AAD_PASSWORD=your-password
