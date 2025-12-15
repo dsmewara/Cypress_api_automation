@@ -1,0 +1,59 @@
+# ==============================
+# Azure DevOps CI Pipeline
+# Cypress Automation
+# ==============================
+
+trigger:
+  - main
+  # change branch name if required
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  NODE_VERSION: '18.x'
+
+steps:
+
+  # ------------------------------
+  # Install Node.js
+  # ------------------------------
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_VERSION)
+    displayName: 'Install Node.js'
+
+  # ------------------------------
+  # Install Dependencies
+  # ------------------------------
+  - script: |
+      npm ci
+    displayName: 'Install NPM Dependencies'
+
+  # ------------------------------
+  # Verify Cypress Installation
+  # ------------------------------
+  - script: |
+      npx cypress verify
+    displayName: 'Verify Cypress Installation'
+
+  # ------------------------------
+  # Run Cypress Tests
+  # ------------------------------
+  - script: |
+      npx cypress run --browser chrome
+    displayName: 'Run Cypress Automation Tests'
+    env:
+      CYPRESS_baseUrl: $(CYPRESS_baseUrl)
+      CYPRESS_username: $(CYPRESS_username)
+      CYPRESS_password: $(CYPRESS_password)
+
+  # ------------------------------
+  # Publish Cypress Screenshots & Videos
+  # ------------------------------
+  - task: PublishBuildArtifacts@1
+    condition: always()
+    inputs:
+      pathToPublish: cypress
+      artifactName: cypress-results
+    displayName: 'Publish Cypress Artifacts'
