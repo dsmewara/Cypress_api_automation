@@ -1,0 +1,33 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: e2e_test
+  - name: NODE_VERSION
+    value: '18.x'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_VERSION)
+    displayName: 'Install Node.js'
+
+  - script: |
+      node -v
+      npm -v
+    displayName: 'Check Node & NPM version'
+
+  - script: |
+      npm install
+    displayName: 'Install dependencies'
+
+  - script: |
+      npx cypress verify
+    displayName: 'Verify Cypress'
+
+  - script: |
+      npx cypress run --browser chrome
+    displayName: 'Run Cypress API Tests'
