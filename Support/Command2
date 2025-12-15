@@ -1,0 +1,69 @@
+const NodeCache = require('node-cache')
+const cache = new NodeCache({ stdTTL: 3600 }) // token valid for 1 hour
+
+Cypress.Commands.add('loginToAAD', () => {
+  const username = Cypress.env('AAD_USERNAME')
+  const password = Cypress.env('AAD_PASSWORD')
+
+  // Fail fast if env is missing
+  if (!username) {
+    throw new Error('AAD_USERNAME is undefined! Check .env or Azure Variable Group.')
+  }
+  if (!password) {
+    throw new Error('AAD_PASSWORD is undefined! Check .env or Azure Variable Group.')
+  }
+
+  // Open base URL
+  cy.visit('/')
+
+  // Login to Microsoft
+  cy.origin(
+    'https://login.microsoftonline.com',
+    { args: { username } },
+    ({ username }) => {
+      cy.get('input[type="email"]')
+        .should('be.visible')
+        .type(username, { log: false })
+      cy.get('input[type="submit"]').click()
+    }
+  )
+
+  // Login to ADFS (depending on user configuration)
+  cy.origin(
+    'https://adfs.ericsson.com',
+    { args: { password } },
+    ({ password }) => {
+      cy.get('input[type="password"]')
+        .should('be.visible')
+        .type(password, { log: false })
+      cy.get('#submitButton').click()
+    }
+  )
+
+  // Navigate back to app base URL
+  cy.visit('/')
+
+  // Intercept createLoginSession API to grab token
+  cy.intercept('POST', `${Cypress.env('API_BASE_URL')}/createLoginSession`).as(
+    'createLoginSession'
+  )
+
+  cy.wait('@createLoginSession').then((interception) => {
+    const token = interception.request.headers.authorization
+    if (token) {
+      try {
+        cy.task('saveToken', token)
+        cy.log('Token cached successfully')
+      } catch (err) {
+        cy.log(`Failed to save token: ${err.message}`)
+      }
+    } else {
+      throw new Error('Token not found in request header')
+    }
+  })
+})
+
+
+
+
+
